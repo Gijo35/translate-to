@@ -1,0 +1,52 @@
+import requests
+
+# Replace with your own VEED API key
+api_key = "your_api_key_here"
+
+# Replace with the URL of your Portuguese audio file
+audio_file_url = "https://your-portuguese-audio-file.com/audio.mp3"
+
+# Transcribe the audio file in Portuguese
+transcription_response = requests.post(
+    "https://api.veed.io/transcriptions",
+    data={
+        "api_key": api_key,
+        "file": audio_file_url,
+        "language": "pt",
+    },
+)
+
+# Get the transcription ID from the response
+transcription_id = transcription_response.json()["id"]
+
+# Wait for the transcription to finish processing
+transcription_status_response = requests.get(
+    f"https://api.veed.io/transcriptions/{transcription_id}",
+    params={
+        "api_key": api_key,
+    },
+)
+while transcription_status_response.json()["status"] != "completed":
+    transcription_status_response = requests.get(
+        f"https://api.veed.io/transcriptions/{transcription_id}",
+        params={
+            "api_key": api_key,
+        },
+    )
+
+# Translate the Portuguese transcription to English
+translation_response = requests.post(
+    "https://api.veed.io/translations",
+    data={
+        "api_key": api_key,
+        "transcription_id": transcription_id,
+        "language": "en",
+    },
+)
+
+# Get the translated subtitle data from the response
+translated_subtitles = translation_response.json()["subtitles"]
+
+# Print the translated subtitles
+for subtitle in translated_subtitles:
+    print(f"{subtitle['start']} --> {subtitle['end']}: {subtitle['text']}")
